@@ -17,7 +17,7 @@ func TestPut(t *testing.T) {
 
 	_,contains = store[key]
 	if contains {
-		t.Error("store should not contain key %q", key)
+		t.Errorf("store should not contain key %q", key)
 	}
 
 	// Err should be nil
