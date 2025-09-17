@@ -4,7 +4,6 @@ import (
 	"errors"
 )
 
-
 // This is creating the core component of the API Services with GET<PUT<DELETE functions
 
 var store = make(map[string]string) 
