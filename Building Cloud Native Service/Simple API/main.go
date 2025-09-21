@@ -34,6 +34,8 @@ func Delete(key string) error{
 	return nil
 }
 
+//Create Function
+
 func KeyValuePutHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key := vars["key"]
@@ -58,10 +60,49 @@ func KeyValuePutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
+// Read Function
+
+func KeyValueGetHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r) //Retrieve "Key" from the request
+	key := vars["key"]
+
+	value, err := Get(key) // Get Value for key
+	if errors.Is(err, ErrorNoSuchKey) {
+		http.Error(w, 
+			err.Error(),
+			http.StatusNotFound)
+		return
+	}
+	if err != nil{
+		http.Error(w, 
+			err.Error(),
+			http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte(value)) //Write value to response
+}
+
+// Delete Handler
+func KeyValueDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["key"]
+
+	errors := Delete(key)
+	if errors != nil {
+		http.Error(w, 
+			errors.Error(),
+			http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func main(){
 r := mux.NewRouter()
 
 	r.HandleFunc("/v1/keys/{key}", KeyValuePutHandler).Methods("PUT")
+	r.HandleFunc("/v1/keys/{key}", KeyValueGetHandler).Methods("GET")
+	r.HandleFunc("/v1/keys/{key}", KeyValueDeleteHandler).Methods("DELETE")
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
