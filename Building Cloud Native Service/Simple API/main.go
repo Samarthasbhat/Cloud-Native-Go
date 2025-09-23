@@ -5,32 +5,56 @@ import (
 	"io"
 	"log"
 	"net/http"
-
+	"sync"
 	"github.com/gorilla/mux"
 )
 
 // This is creating the core component of the API Services with GET<PUT<DELETE functions
 
-var store = make(map[string]string) 
+// var store = make(map[string]string)
+
+var store = struct{
+	sync.RWMutex
+	m map[string]string
+}{m: make(map[string]string)}
 
 func Put(key string, value string) error {
-		store[key] = value
+		// store[key] = value
+		// return nil
+
+		store.Lock()
+		store.m[key] = value
+		store.Unlock()
+
 		return nil
 	}
 
 	var ErrorNoSuchKey = errors.New("no such key")
 
 func Get(key string) (string, error) {
-	value, ok := store[key]
+	// value, ok := store[key]
 
-	if !ok{
-		return "", ErrorNoSuchKey
-	}
-	return value, nil
+	// if !ok{
+	// 	return "", ErrorNoSuchKey
+	// }
+	// return value, nil
+	store.RLock()
+		value, ok := store.m[key]
+		store.RLock()
+
+		if !ok{
+			return " ", ErrorNoSuchKey
+		}
+		return value, nil
 }
 
 func Delete(key string) error{
-	delete(store, key)   //Inbuilt function to delete a key from a map
+	// delete(store, key)   //Inbuilt function to delete a key from a map
+	// return nil
+	store.Lock()
+	defer store.Unlock()
+
+	delete(store.m, key)
 	return nil
 }
 
