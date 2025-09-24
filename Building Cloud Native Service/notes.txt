@@ -5,4 +5,3 @@ It is used to maintain the records of all time
 It allows to reconstruct original State
 
 - Storing State in a External Database
-  
