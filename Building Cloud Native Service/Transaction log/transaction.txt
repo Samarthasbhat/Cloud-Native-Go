@@ -1,0 +1,54 @@
+
+1. **Purpose** → The `TransactionLogger` ensures persistence: it logs all `PUT` and `DELETE` operations so the key-value store can be rebuilt after a crash.
+
+2. **EventType** → Defines types of operations: `EventPut (2)` and `EventDelete (1)`.
+
+3. **Event struct** → Stores one log entry with:
+
+   * `Sequence` (transaction number),
+   * `EventType` (put/delete),
+   * `Key`,
+   * `Value`.
+
+4. **TransactionLogger struct** → Holds the log system:
+
+   * `events` channel (incoming writes),
+   * `errors` channel,
+   * `lastSequence`,
+   * `file` (log file handle),
+   * `wg` (`sync.WaitGroup` for safe shutdown).
+
+5. **WritePut / WriteDelete** → Add events to the `events` channel.
+
+   * Uses `wg.Add(1)` so writes are tracked.
+   * Values are URL-escaped to avoid breaking log format.
+
+6. **Run()** → Starts a goroutine that:
+
+   * Listens on `events`,
+   * Increments `lastSequence`,
+   * Writes each event to the log file in format:
+
+     ```
+     Sequence EventType Key Value
+     ```
+
+7. **Wait() & Close()** →
+
+   * `Wait()` ensures all pending events are written,
+   * `Close()` closes channels and the file safely.
+
+8. **ReadEvents()** → Replays the log by reading each line from the file.
+
+   * Parses into `Event` objects,
+   * Checks transaction order,
+   * Decodes `Value` back (QueryUnescape).
+
+9. **Recovery use** → After restart, you loop over `ReadEvents()` to rebuild the store by applying `PUT` or `DELETE` events again.
+
+10. **Big picture** → This design ensures **data durability**:
+
+* Writes are asynchronous but guaranteed,
+* Crashes won’t lose history,
+* System can always replay logs to restore state.
+
