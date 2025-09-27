@@ -1,9 +1,10 @@
 package main
 
-
 import (
 	"database/sql"
-	_ "github.com/lib/pq"  // Import the driver package
+	"fmt"
+
+	_ "github.com/lib/pq" // Import the driver package
 )
 
 // Importing a database drivers
@@ -31,6 +32,13 @@ type PostgresDBParams struct{
 
 // variables   
 
+logger, err = NewPostgresTransactionLogger(PostgresDBParams{
+	host: "localhost",
+	dbName: "kvs",
+	user: "test",
+	password: "hunter2"
+})
+
 type PostgresTransactionLogger struct{
 	events chan<- Event  //Write-only channel for sending events
 	errors <-chan error //Read-only channel for receiving errors
@@ -49,3 +57,27 @@ func (l *PostgresTransactionLogger) Err() <-chan error{
 	return l.errors
 }
 
+
+
+func NewPostgresTransactionLogger(config PostgresDBParams) (TransactionLogger, error){
+	connStr := fmt.Sprintf("host=%s dbame=%s user=%s password=%s",
+	config.host, config.dbName, config.user, config.password)
+
+	db, err := sql.Open("postgres", connStr)
+	if err!= nil{
+		return  nil, fmt.Errorf("failed to open db: %w", err)
+	}
+	logger := &PostgresTransactionLogger{db: db}
+
+	exists, err := logger.verifyTableExists()
+	if err!= nil {
+		return nil, fmt.Errorf("failed tp verify table exists: %w", err)
+	}
+	if !exists{
+		if err = logger.createTable(); err != nil {
+			return  nil, fmt.Errorf("failed to create table: %w", err)
+
+		}
+	}
+	return logger
+}
