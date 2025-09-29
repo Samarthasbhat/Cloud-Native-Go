@@ -29,5 +29,7 @@ myMap.RUnlock()
 fmt.Println("some_key:", value)
 
 // Read locks are less restrictive than write locks 
-// Now we can implement the RWMutex to Simple API
+// Now we can implement the RWMutex to Simple APIdocker run --name pg -e POSTGRES_USER=test -e POSTGRES_PASSWORD=hunter2 \
+  -v "/c/Users/samar/OneDrive/Documents/Cloud Native Go/Building Cloud Native Service/storing-state-db/pg_hba.conf":/etc/postgresql/conf.d/pg_hba.conf:ro \
+  -p 5432:5432 -d postgres
 
