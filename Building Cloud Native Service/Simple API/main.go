@@ -127,7 +127,7 @@ r := mux.NewRouter()
 	r.HandleFunc("/v1/keys/{key}", KeyValuePutHandler).Methods("PUT")
 	r.HandleFunc("/v1/keys/{key}", KeyValueGetHandler).Methods("GET")
 	r.HandleFunc("/v1/keys/{key}", KeyValueDeleteHandler).Methods("DELETE")
-
+	
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
