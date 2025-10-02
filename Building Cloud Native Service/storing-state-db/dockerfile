@@ -1,0 +1,25 @@
+# Stage 1. Build the go binary
+FROM golang:1.24.1 AS build
+
+WORKDIR /app
+
+# Copy Go source file
+COPY . .
+
+# Download dependencies
+RUN go mod tidy
+
+# Build the binary for Linux
+RUN CGO_ENABLED=0 GOOS=linux go build -o kvs main.go
+
+# Stage 2. Create a minimal image
+FROM scratch
+
+#Copy the binary from the build stage
+COPY --from=build /app/kvs /kvs
+
+# Expose if port needed (optional)
+EXPOSE 8080
+
+# Run the binary
+CMD ["/kvs"]
